@@ -26,6 +26,15 @@ all(row.names(reordered_mdata) == colnames(dat))
 #set up Seurat Object
 immx <- CreateSeuratObject(counts = dat, min.cells =3, min.features = 200, meta.data = reordered_mdata, project = "singlecell_immx", assay = "RNA")
 
+#Remove mia1b because this sample do not have matched samples from CODEX
+immx.subset <- subset(immx, subset = meta.data@mia_ID != "MIA1b")
+immx <- immx.subset
+
+#If neeed to add CODEX ID into the meta data for other purposes - uncheck comments and run below example codes
+#x <- immx@meta.data$codex_ID
+#x <- gsub("mia11a","P1",x)
+#immx@meta.data$codex_ID <- x
+
 #Filter low quality cells
 immx_filtered <- subset(immx, subset = nFeature_RNA > 200 & nFeature_RNA < 7000 & percent.mt < 40)
 
