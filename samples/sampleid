@@ -1,0 +1,12 @@
+codexid	scrnaseqid	comments
+P1	MIA11_PRE	
+P2	MIA11_PROG	
+P3	MIA11_EDT	
+P4	MIA8_PRE	no_scrnaseq_data
+P5	MIA1_PRE	
+P6	MIA10_PRE	
+P7	MIA9_PRE	
+
+#PRE - before treatment
+#EDT - during treatment
+#PROG - after treatment
