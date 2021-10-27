@@ -1,12 +1,12 @@
-codexid	scrnaseqid	mia_ID_seuratmetadata	comments
-P1	MIA11_PRE	mia11a	
-P2	MIA11_PROG	mia11b	
-P3	MIA11_EDT	mia11c	
-P4	MIA8_PRE	mia8	no_scrnaseq_data
-P5	MIA1_PRE	mia1a	
-P6	MIA10_PRE	mia10	
-P7	MIA9_PRE	mia9	
-NA	MIA1_PROG	mia1b	no_CODEX_data
+codexid	scrnaseqid	mia_ID_seuratmetadata	samples_for_integration	comments
+P1	MIA11_PRE	mia11a	Yes	
+P2	MIA11_PROG	mia11b	Yes	
+P3	MIA11_EDT	mia11c	Yes	
+P4	MIA8_PRE	mia8	No	no_scrnaseq_data
+P5	MIA1_PRE	mia1a	Yes	
+P6	MIA10_PRE	mia10	Yes	
+P7	MIA9_PRE	mia9	Yes	
+NA	MIA1_PROG	mia1b	No	no_CODEX_data
 
 #PRE - before treatment
 #EDT - during treatment
