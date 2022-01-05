@@ -1,0 +1,55 @@
+---
+title: "Seurat2Scanpy"
+author: "Aditya Pratapa"
+date: "7/21/2021"
+output: html_document
+
+---
+The following code needs to be run in R v4, after installing necessary packages. STvEA is in R v3. 
+```{r}
+library(Seurat)
+library(SeuratDisk)
+
+```
+```{r}
+inRDS <- readRDS('rawdata/Complete_integration_obj.rds')
+```
+
+```{r}
+DefaultAssay(inRDS) <- "integratedRNA"
+SaveH5Seurat(inRDS, filename = "rawdata/MIA_iRNA.h5Seurat", overwrite = TRUE, )
+Convert("rawdata/MIA_iRNA.h5Seurat", dest = "h5ad",overwrite = TRUE)
+
+DefaultAssay(inRDS) <- "integratedADT"
+SaveH5Seurat(inRDS, filename = "MIA_iADT.h5Seurat", overwrite = TRUE, )
+Convert("rawdata/MIA_iADT.h5Seurat", dest = "h5ad",overwrite = TRUE)
+```
+
+Optional/un-used code to subset CITE-seq datasets:
+```
+MIA11_Prog <- row.names(inRDS@meta.data[inRDS@meta.data$sample_HTO == 'MELCAP04_HTO5' & inRDS@meta.data$species == 'human',])
+subRDS <- inRDS[,MIA11_Prog]
+
+DefaultAssay(subRDS) <- "RNA"
+SaveH5Seurat(subRDS, filename = "MIA11_Prog_RNA.h5Seurat", overwrite = TRUE, )
+Convert("MIA11_Prog_RNA.h5Seurat", dest = "h5ad",overwrite = TRUE)
+
+DefaultAssay(subRDS) <- "ADT"
+SaveH5Seurat(subRDS, filename = "MIA11_Prog_ADT.h5Seurat", overwrite = TRUE, )
+Convert("MIA11_Prog_ADT.h5Seurat", dest = "h5ad",overwrite = TRUE)
+
+MIA11_Prog <- row.names(inRDS@meta.data[inRDS@meta.data$sample_HTO == 'MELCAP04_HTO5' & inRDS@meta.data$species == 'human',])
+subRDS <- inRDS[,MIA11_Prog]
+
+DefaultAssay(subRDS) <- "integratedRNA"
+SaveH5Seurat(subRDS, filename = "MIA11_Prog_iRNA.h5Seurat", overwrite = TRUE, )
+Convert("MIA11_Prog_iRNA.h5Seurat", dest = "h5ad",overwrite = TRUE)
+
+MIA11_Prog <- row.names(inRDS@meta.data[inRDS@meta.data$sample_HTO == 'MELCAP04_HTO5' & inRDS@meta.data$species == 'human',])
+subRDS <- inRDS[,MIA11_Prog]
+
+DefaultAssay(subRDS) <- "integratedADT"
+SaveH5Seurat(subRDS, filename = "MIA11_Prog_iADT.h5Seurat", overwrite = TRUE, )
+Convert("MIA11_Prog_iADT.h5Seurat", dest = "h5ad",overwrite = TRUE)
+```
+
