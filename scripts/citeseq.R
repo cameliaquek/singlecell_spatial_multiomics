@@ -8,7 +8,7 @@ library(RColorBrewer)
 all <- readRDS("/Users/camelia/Projects/immx_evolution/CITEseq/MIA_ALL_obj.rds")
 
 #Filter negative and doublet from analysis
-all_filter <- subset(allcd45, subset = sample_ID != "Doublet" | sample_ID != "Negative")
+all_filter <- subset(all, subset = sample_ID != "Doublet" | sample_ID != "Negative")
 
 #Sample ID should contains the names of all samples if mouse/genative/doublet are removed.
 #> unique(all_filter@meta.data$sample_ID)
@@ -18,7 +18,7 @@ all_filter <- subset(allcd45, subset = sample_ID != "Doublet" | sample_ID != "Ne
 #[7] "MELCAP04_MIA10_Subcut_Pre"    "MELCAP04_MIA11-Subcut_Prog-2"
 
 #/////////////////redo anchoring on IMMUNE cells
-# Remove mouse labels
+# Remove mouse/rat labels
 all_cite <- GetAssayData(object = all, assay = "ADT", slot = "data")
 all_rna <- GetAssayData(object = all, assay = "RNA", slot = "data")
 all.rna1 <- all.rna[!grepl("mm10", row.names(all.rna)),]
