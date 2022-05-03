@@ -1,0 +1,70 @@
+---
+title: "CITE-SeqPreprocessing"
+output: html_document
+---
+
+```{r}
+#Load library
+library(Seurat)
+library(dplyr)
+library(ggplot2)
+library(RColorBrewer)
+
+all <- readRDS("Complete_integration_obj_filter1.rds") # keep all the integration resolution
+all_filter <- subset(all,cells = row.names(all@meta.data[!grepl("Doublet|Negative", all@meta.data$sample_ID),]))
+
+#/////only run once to remove technical low and extreme high reads
+#DefaultAssay(all_filter) <- "RNA"
+#pdf("QC_features_RNA.pdf") 
+#FeatureScatter(object = all_filter, feature1 = "nCount_RNA", feature2 = "percent.mito")
+#FeatureScatter(object = all_filter, "nCount_RNA", feature2 = "nFeature_RNA")
+#dev.off()
+
+#Based on the QC features plot, extreme high and low reads are removed
+DefaultAssay(all_filter) <- "RNA"
+all_filter <- subset(all_filter, subset = nFeature_RNA > 250 & nFeature_RNA < 8500 & nCount_RNA < 150000) 
+
+#Run UMAP to do a quick check
+DimPlot(all_filter, reduction = "iRNAwADTntwnn.umap", group.by="iRNAwADTwsnn_res.1", label=TRUE)
+#Optional - subset UMAP to show immune microenvironment cells, exclude tumour cells.
+#tme_filter <- subset(object = all_filter, idents = c(3, 7, 10, 12, 15, 19, 20, 21, 22, 25, 26, 29, 32, 33, 34, 35, 36, 37))
+#DimPlot(tme_filter, reduction = "iRNAwADTntwnn.umap", group.by="iRNAwADTwsnn_res.1", label=TRUE)
+
+
+#Change identity to fit in with resolution 1
+Idents(object = all_filter) <- all_filter@meta.data$"iRNAwADTwsnn_res.1"
+all.RNAmarkers <- FindAllMarkers(all_filter, min.pct = 0.15, logfc.threshold = 0.15, assay = "RNA")
+all.ADTmarkers <- FindAllMarkers(all_filter, min.pct = 0.15, logfc.threshold = 0.15, assay = "ADT")
+top20rna <- all.RNAmarkers %>% group_by(cluster) %>% top_n(n = 20, wt = avg_log2FC)
+top20adt <- all.ADTmarkers %>% group_by(cluster) %>% top_n(n = 20, wt = avg_log2FC)
+write.table(top20rna, file="all_top20rna.txt", quote=FALSE, sep="\t", col.names=NA, row.names=TRUE)
+write.table(top20adt, file="all_top20adt.txt", quote=FALSE, sep="\t", col.names=NA, row.names=TRUE)
+
+#perform single R
+DefaultAssay(ptall) <- "RNA"
+library(SingleR)
+library(celldex)
+library(SingleR)
+
+#refernece database
+immunestroma.ref <- BlueprintEncodeData()
+
+#convert seurat object to singleR obj
+objR <- as.SingleCellExperiment(all_filter)
+
+#Run SingleR
+pred.immunestroma.ref <- SingleR(test = objR, ref = immunestroma.ref, assay.type.test=1, labels = immunestroma.ref$label.fine)
+write.table(pred.immunestroma.ref, file="SingleR_results_immunestromaref.txt", quote=FALSE, sep="\t", col.names=NA, row.names=TRUE)
+
+all_filter[["SingleRlabelsimmstroma"]] <- pred.immunestroma.ref$labels
+
+library(plyr)
+df <- all_filter@meta.data
+counts3 <- ddply(df, .(df$iRNAwADTwsnn_res.1, df$SingleRlabelsimmstroma), nrow)
+names(counts1) <- c("iRNAwADTwsnn_res.1", "SingleRlabelsimmstroma", "freq")
+counts3 <- data.frame(counts3)
+write.table(counts3, file="SingleR_cellannot_immunestroma1.txt", quote=FALSE, sep="\t", col.names=NA, row.names=TRUE)
+
+#Label cell types based according to the file: SingleR_cellannot_immunestroma1.txt
+#Markers for each cell type can be inferred by the top20ADT/RNA makers
+
