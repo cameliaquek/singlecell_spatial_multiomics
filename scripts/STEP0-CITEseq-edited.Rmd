@@ -58,8 +58,8 @@ iRNA.pred.iref <- SingleR(test = tpmMIA, ref = iCE, assay.type.test=1, labels = 
 all_filter@meta.data[,'SingleR_RNARaw_ann'] <- iRNA.pred.iref[all_filter@meta.data$iRNAwADTwsnn_res.1,'pruned.labels']
 all_filter@meta.data$immune_refNA <- is.na(all_filter@meta.data$SingleR_RNARaw_ann)
 all_filter2 <- subset(x = all_filter, subset = (immune_refNA == FALSE ))
-png("UMAP-RNARaw.png",width=25, height=35, res=500, units = 'cm')
 #Save UMAP in PNG
+png("UMAP-RNARaw.png",width=25, height=35, res=500, units = 'cm')
 DimPlot(all_filter2, reduction = "iRNAwADTntwnn.umap", group.by = "SingleR_RNARaw_ann", label=T, repel=TRUE, split.by = "sample_ID", pt.size=0.8,ncol=2) + NoLegend()
 dev.off()
 
