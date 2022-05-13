@@ -24,7 +24,7 @@ Idents(object = all_filter) <- all_filter@meta.data$"iRNAwADTwsnn_res.1"
 
 #Run FindAllMarkers
 all.RNAmarkers <- FindAllMarkers(all_filter, min.pct = 0.15, logfc.threshold = 0.15, assay = "RNA")
-all.adtmarkers <- FindAllMarkers(ptall, min.pct = 0.15, logfc.threshold = 0.15, assay = "ADT")
+all.adtmarkers <- FindAllMarkers(all_filter, min.pct = 0.15, logfc.threshold = 0.15, assay = "ADT")
 
 #Perform TPM scaling with gene length prior to SingleR
 library(AnnotationHub)
