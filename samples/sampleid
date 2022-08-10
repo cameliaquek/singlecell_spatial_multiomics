@@ -1,7 +1,7 @@
 codexid	scrnaseqid	mia_ID_seuratmetadata	samples_for_integration	comments
 P1	MIA11_PRE	MIA11a	Yes	
-P2	MIA11_PROG	MIA11b	Yes	
-P3	MIA11_EDT	MIA11c	Yes	
+P2	MIA11_EDT	MIA11b	Yes	
+P3	MIA11_PROG	MIA11c	Yes	
 P4	MIA8_PRE	MIA8	No	no_scrnaseq_data
 P5	MIA1_PRE	MIA1a	Yes	
 P6	MIA10_PRE	MIA10	Yes	
