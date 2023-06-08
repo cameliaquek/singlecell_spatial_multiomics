@@ -1,0 +1,130 @@
+---
+title: "CITE-SeqPreprocessing"
+output: html_document
+---
+
+```{r}
+#Load library
+library(Seurat)
+library(dplyr)
+library(ggplot2)
+library(RColorBrewer)
+
+#Load integrated object into R. This R object already integrated ADT and RNA.
+all <- readRDS("rawdata/Complete_integration_obj_filter1.rds")
+
+#After loading the object, perform extra filtering to ensure that only positive markers are analysed in this script.
+all_filter <- subset(all,cells =row.names(all@meta.data[!grepl("Doublet|Negative", all@meta.data$sample_ID),]))
+DefaultAssay(all_filter) <- "RNA"
+all_filter <- all_filter[!grepl("mm10", row.names(all_filter)),]
+all_filter <- all_filter[!(grepl("RP", row.names(all_filter)) & grepl("-", row.names(all_filter))),]
+
+#WNN method and resolution 1 is chosen 
+Idents(object = all_filter) <- all_filter@meta.data$"iRNAwADTwsnn_res.1"
+```
+
+````{r}
+#Run FindAllMarkers
+#all.RNAmarkers <- FindAllMarkers(all_filter, min.pct = 0.15, logfc.threshold = 0.15, assay = "RNA")
+#all.adtmarkers <- FindAllMarkers(all_filter, min.pct = 0.15, logfc.threshold = 0.15, assay = "ADT")
+
+#Perform TPM scaling with gene length prior to SingleR
+library(AnnotationHub)
+hsdb = AnnotationHub()[['AH73881']]
+hs.exons <- exonsBy(hsdb, by="gene")
+hs.exons <- reduce(hs.exons)
+hs.len <- sum(width(hs.exons))
+
+library('biomaRt')
+mart <- useDataset("hsapiens_gene_ensembl", useMart("ensembl"))
+genes <- names(hs.len)
+G_list <- getBM(filters= "ensembl_gene_id", attributes= c("ensembl_gene_id",
+"hgnc_symbol"),values=genes,mart= mart)
+
+uniqGList <- G_list[!duplicated(G_list$hgnc_symbol),]
+keep <- row.names(all_filter@assays$RNA)[row.names(all_filter@assays$RNA) %in% uniqGList$hgnc_symbol]
+rownames(uniqGList) <- uniqGList$hgnc_symbol
+DefaultAssay(all_filter) <- "RNA"
+
+#Run SingleR
+library(SingleR)
+library(scater)
+tpmMIA <- calculateTPM(all_filter@assays$RNA[keep,], lengths=hs.len[uniqGList[keep,'ensembl_gene_id']])
+
+iCE <-BlueprintEncodeData()#DatabaseImmuneCellExpressionData()
+
+iRNA.pred.iref <- SingleR(test = tpmMIA, ref = iCE, assay.type.test=1, labels = iCE$label.fine,
+                          clusters=all_filter@meta.data$iRNAwADTwsnn_res.1)
+                          
+#Prepare UMAP plot
+
+
+# CITE-seq protein
+cite_protein <- read.table("rawdata/MIA_iADT.csv",
+                           sep=",", row.names=1, header=TRUE)#, stringsAsFactors = FALSE)
+cite_protein <- as.data.frame(cite_protein)
+cite_protein <- cite_protein[, !grepl("Mouse", colnames(cite_protein))]
+cite_protein <- cite_protein[, !grepl("Rat", colnames(cite_protein))]
+colnames(cite_protein) <- sapply(colnames(cite_protein), function(x) gsub("CITE.", "", x))
+colnames(cite_protein)[names(cite_protein) == 'CD11C'] <- 'CD11c'
+colnames(cite_protein)[names(cite_protein) == 'PDL1'] <- 'PD.L1'
+colnames(cite_protein)[names(cite_protein) == 'PD1'] <- 'PD.1'
+colnames(cite_protein)[names(cite_protein) == 'TIM3'] <- 'TIM.3'
+
+colnames(cite_protein)[names(cite_protein) == 'CD8A'] <- 'CD8'
+colnames(cite_protein)[names(cite_protein) == 'CD3'] <- 'CD3e'@meta.data[,'SingleR_RNARaw_ann'] <- iRNA.pred.iref[all_filter@meta.data$iRNAwADTwsnn_res.1,'pruned.labels']
+all_filter@meta.data$immune_refNA <- is.na(all_filter@meta.data$SingleR_RNARaw_ann)
+all_filter2 <- subset(x = all_filter, subset = (immune_refNA == FALSE ))
+#Save UMAP in PNG
+png("UMAP-RNARaw.png",width=25, height=35, res=500, units = 'cm')
+DimPlot(all_filter2, reduction = "iRNAwADTntwnn.umap", group.by = "SingleR_RNARaw_ann", label=T, repel=TRUE, split.by = "sample_ID", pt.size=0.8,ncol=2) + NoLegend()
+dev.off()
+
+#Save files
+saveRDS(all_filter,'CITE-Seq_wnn_integrated_annotated.RDS')
+write.csv(all_filter@meta.data,'MIA_annotatedMetadata.csv',)
+write.csv(tpmMIA,'MIA_RNA_TPM.csv')
+write.csv(all_filter@assays$integratedADT@counts,'MIA_iADT_SCT.csv')
+write.csv(all_filter@assays$integratedRNA@counts,'MIA_iRNA_SCT.csv')
+```
+
+```{r}
+saveRDS(all_filter2@assays$integratedRNA@data,"newData/MIA_iRNA.RDS", version=2)
+
+```
+
+
+```{r}
+saveRDS(all_filter2@assays$RNA@counts,"newData/MIA_RNA.RDS", version=2)
+```
+
+
+```{r}
+```
+
+```{r}
+all@meta.data$isPresent <- rownames(all@meta.data) %in% rownames(all_filter2@meta.data)
+ADTSubset <- subset(all,isPresent==TRUE)
+DefaultAssay(ADTSubset) <- "ADT"
+```
+
+```{r}
+ADTSubset <- ADTSubset[!grepl("mm10", row.names(ADTSubset)),]
+ADTSubset <- ADTSubset[!(grepl("RP", row.names(ADTSubset)) & grepl("-", row.names(ADTSubset))),]
+ADTSubset
+```
+```{r}
+write.csv(ADTSubset@assays$integratedADT@data,'newData/MIA_iADT.csv')
+write.csv(ADTSubset@assays$ADT@counts,'newData/MIA_ADT.csv')
+```
+
+```{r}
+write.csv(all_filter2@meta.data,'MIA_annotatedMetadata.csv',)
+
+```
+
+```{r}
+write.csv(all_filter2@reductions$iRNAwADTntwnn.umap@cell.embeddings,"MIA_iRNAwADTumap.csv")
+
+```
+

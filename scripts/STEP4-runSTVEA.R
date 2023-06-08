@@ -35,6 +35,7 @@ stvea1_object<- readRDS(paste0(arguments$inPrefix,'_Stvea.RDS'))
 codex_split <- sample.int(nC,nrow(stvea1_object@codex_clean),replace=TRUE)
 
 common_proteins <- colnames(stvea1_object@cite_clean)[colnames(stvea1_object@cite_clean) %in% colnames(stvea1_object@codex_clean)]
+print(common_proteins)
 ref_mat <- stvea1_object@cite_clean[,common_proteins]
 stvea1_object@corrected_codex <- data.frame(matrix(,ncol=length(common_proteins),nrow=nrow(stvea1_object@codex_clean)))
 rownames(stvea1_object@corrected_codex) <- row.names(stvea1_object@codex_clean)
@@ -47,10 +48,10 @@ for (ix in c(1:nC)){
   rna_mat = stvea1_object@cite_latent
   cite_index = 1
   num.cc = ncol(ref_mat)-1
-  k.anchor = 20
-  k.filter=100
-  k.score=80
-  k.weight=100
+  k.anchor = 500
+  k.filter=200
+  k.score=200
+  k.weight=200
   verbose=TRUE
   
   # Call the same functions MapCODEXtoCITE() calls
