@@ -72,9 +72,8 @@ labelsDF <- read.csv(arguments$transferFile, sep=',', row.names = 1)
 #print(head(labelsDF))
 # to-do pass k and c as input arguments.
 print("Computing transfer matrix. This may take a while.")
-codex1_subset <- rownames(stvea1_object@corrected_codex)[sample(nrow(stvea1_object@corrected_codex),25000)]
 
-transfer_matrix1 <- GetTransferMatrixNew(stvea1_object@corrected_codex[codex1_subset,], 
+transfer_matrix1 <- GetTransferMatrixNew(stvea1_object@corrected_codex, 
                                          stvea1_object@cite_clean[,colnames(stvea1_object@corrected_codex)])#,k = 15,  c=0.1)
 saveRDS(transfer_matrix1, paste0(arguments$outPrefix,'_','transMatrix','.RDS'))
 
@@ -89,38 +88,28 @@ onh <- one_hot(as.data.table(labelsDF),cols=cName)
 #onh <- onh0[,grepl(cName, colnames(onh)),with = FALSE]
 
 tfdf <- onh[,grepl(cName, colnames(onh)),with = FALSE]
-#print(head(tfdf))
-#print(dim(tfdf))
-#print(dim(transfer_matrix1))
-tflab <- as.matrix(t(transfer_matrix1))  %*%  Matrix(as.matrix(tfdf), sparse = T)
-print(sum(is.na(tflab)))
+
+tflab <- as.matrix(t(transfer_matrix1)  %*%  Matrix(as.matrix(tfdf), sparse = T))
 # Retreive the cluster labels back by removing cName_ prefix.
-TransferredClusters <- gsub(paste0(cName,"_"),"",colnames(tflab)[max.col(tflab,ties.method="first")])
-#TransferredClusters <- colnames(tflab)[max.col(tflab,ties.method="first")]
-outDF <- as.data.frame(stvea1_object@codex_clean[codex1_subset,])
+TransferredClusters <- as.integer(gsub(paste0(cName,"_"),"",colnames(tflab)[max.col(tflab,ties.method="first")]))
+outDF <- as.data.frame(stvea1_object@codex_clean)
 # t_ represents transferred values.
 outDF[,paste0("t_",cName)] <-TransferredClusters
-row.names(outDF) <- row.names(stvea1_object@corrected_codex[codex1_subset,])
+row.names(outDF) <- row.names(stvea1_object@corrected_codex)
 write.csv(outDF, paste0(arguments$outPrefix,'_',cName,'.csv'))
 }
-print("Done labels")
-cADTNorm <- read.csv('../Swarbrick/Tsl_ADT_Raw_GMM.csv',sep=",", row.names=1, header=TRUE)
-tfprot <- as.matrix(t(transfer_matrix1)  %*%  Matrix(as.matrix(cADTNorm), sparse = T))
+tfprot <- as.matrix(t(transfer_matrix1)  %*%  Matrix(as.matrix(stvea1_object@cite_clean), sparse = T))
 protDF <- as.data.frame(tfprot)
-#colnames(protDF) <- paste("t",colnames(stvea1_object@cite_clean),sep="_")
-colnames(protDF) <- paste("t",colnames(cADTNorm),sep="_")
-row.names(protDF) <- row.names(stvea1_object@corrected_codex[codex1_subset,])
+colnames(protDF) <- paste("t",colnames(stvea1_object@cite_clean),sep="_")
+row.names(protDF) <- row.names(stvea1_object@corrected_codex)
 
 write.csv(protDF, paste0(arguments$outPrefix,'_','cADT','.csv'))
 # skipping this for now
-print("Done ADT")
 
-tfRNA <- as.matrix(t(transfer_matrix1)  %*%  Matrix(as.matrix(stvea1_object@cite_mRNA_norm), sparse = T))
-rnaDF <- as.data.frame(tfRNA)
-colnames(rnaDF) <- paste("t",colnames(stvea1_object@cite_mRNA_norm),sep="_")
-row.names(rnaDF) <- row.names(stvea1_object@corrected_codex[codex1_subset,])
-saveRDS(rnaDF, paste0(arguments$outPrefix,'_','cRNA','.RDS'))
-write.csv(rnaDF, paste0(arguments$outPrefix,'_','cRNA','.csv'))
-
+#tfRNA <- as.matrix(t(transfer_matrix1)  %*%  Matrix(as.matrix(stvea1_object@cite_mRNA_norm), sparse = T))
+#rnaDF <- as.data.frame(tfRNA)
+#colnames(rnaDF) <- paste("t",colnames(stvea1_object@cite_mRNA_norm),sep="_")
+#row.names(rnaDF) <- row.names(stvea1_object@corrected_codex)
+#saveRDS(rnaDF, paste0(arguments$outPrefix,'_','cRNA','.RDS'))
 print("Done.")
 

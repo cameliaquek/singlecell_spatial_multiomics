@@ -31,7 +31,6 @@ FitGaussian <- function(norm_protein_expr) {
   return(expr_clean)
 }
 
-
 GaussCITE <-function (norm_cite_protein, num_cores = 1) 
 {
   if (num_cores > 1) {
@@ -56,7 +55,6 @@ GaussCITE <-function (norm_cite_protein, num_cores = 1)
   return(cite_protein_clean)
 }
 
-
 NormCells <- function(to_norm, norm_by=to_norm) {
   nonzero <- rowSums(norm_by) != 0
   protein_norm <- to_norm
@@ -78,7 +76,7 @@ gaussNorm <- function (codex_filtered)
       codex_clean[, i] <- expr_clean
     }
     else{
-      print(paste0("failed: ",i))
+      print(i)
       codex_clean[, i] <- 0
     }
   }
@@ -127,7 +125,8 @@ stvea1_objectRAW@corrected_codex <- NULL
 
 codex_protein_norm <- stvea1_objectRAW@codex_protein - min(stvea1_objectRAW@codex_protein)
 avg_cell_total <- mean(rowSums(codex_protein_norm))
-codex_protein_norm <- NormCells(codex_protein_norm) * avg_cell_total
+codex_protein_norm <- NormCells(codex_protein_norm) * 
+  avg_cell_total
 codex_clean <- gaussNorm(codex_protein_norm)
 stvea1_objectRAW@codex_clean <-  codex_clean[, colSums(codex_clean) > 0]
 stvea1_objectRAW@codex_protein <-  stvea1_objectRAW@codex_protein[, colSums(codex_clean) > 0]
@@ -138,33 +137,27 @@ stvea1_object <- copy(stvea1_objectRAW)
 # CITE-seq protein
 cite_protein <- read.table("rawdata/MIA_iADT.csv",
                            sep=",", row.names=1, header=TRUE)#, stringsAsFactors = FALSE)
-
-
 cite_protein <- as.data.frame(cite_protein)
-print(head(cite_protein))
 cite_protein <- cite_protein[, !grepl("Mouse", colnames(cite_protein))]
 cite_protein <- cite_protein[, !grepl("Rat", colnames(cite_protein))]
 colnames(cite_protein) <- sapply(colnames(cite_protein), function(x) gsub("CITE.", "", x))
 colnames(cite_protein)[names(cite_protein) == 'CD11C'] <- 'CD11c'
 colnames(cite_protein)[names(cite_protein) == 'PDL1'] <- 'PD.L1'
-#colnames(cite_protein)[names(cite_protein) == 'PD1'] <- 'PD.1'
-#colnames(cite_protein)[names(cite_protein) == 'TIM3'] <- 'TIM.3'
+colnames(cite_protein)[names(cite_protein) == 'PD1'] <- 'PD.1'
+colnames(cite_protein)[names(cite_protein) == 'TIM3'] <- 'TIM.3'
+
 colnames(cite_protein)[names(cite_protein) == 'CD8A'] <- 'CD8'
 colnames(cite_protein)[names(cite_protein) == 'CD3'] <- 'CD3e'
 
-#colnames(cite_protein)[names(cite_protein) == 'HLA.A.B.C'] <- 'HLA.X'
+colnames(cite_protein)[names(cite_protein) == 'HLA.A.B.C'] <- 'MHCI'
 commonProt <- sort(intersect(colnames(cite_protein), colnames(stvea1_object@codex_clean)))
-print(commonProt)
 #sort(setdiff(colnames(cite_protein), colnames(colnames(stvea1_object@codex_clean))))
 #sort(setdiff(colnames(stvea1_object@codex_clean), colnames(cite_protein)))
-#cite_mRNA <- readRDS("rawdata/MIA_iRNA.RDS")
-print("Reading RNA...")
 cite_mRNA <- readRDS("rawdata/MIA_iRNA.RDS")
 
 # CITE-seq mRNA latent space, such as output by scVI
 cite_latent <- (read.table("rawdata/MIA_iPC_latent.csv",
-                           sep=",", header=TRUE, row.names=1, stringsAsFactors = F)),                           
-print("Done reading...")
+                           sep=",", header=TRUE, row.names=1, stringsAsFactors = F))#-scvi-latent.csv",
 
 cite_latent <- as.data.frame(cite_latent)
 stvea1_object <- SetDataCITE(cite_mRNA= cite_mRNA,
@@ -172,20 +165,12 @@ stvea1_object <- SetDataCITE(cite_mRNA= cite_mRNA,
                              cite_protein = cite_protein,
                              cite_latent = cite_latent,
                              stvea_object = stvea1_object)
-
-print("Cleaning CITE-ADT...")
-print(commonProt)
-keepProt <- commonProt#[colSums(stvea1_object@cite_protein[,commonProt])>0]
-print(keepProt)#write.csv(stvea1_object@cite_clean,"datasets/MIA_CiteClean.csv")
-stvea1_object@cite_clean <- GaussCITE(stvea1_object@cite_protein[,keepProt])
-
-print("Done cleaning cite-protein...")
+stvea1_object@cite_clean <- GaussCITE(stvea1_object@cite_protein, 1)
+#write.csv(stvea1_object@cite_clean,"datasets/MIA_CiteClean.csv")
 
 stvea1_object@cite_mRNA_norm <- cite_mRNA
-print(colSums(stvea1_object@cite_clean[,keepProt]))
+keepProt <- commonProt[colSums(stvea1_object@cite_clean[,commonProt])>0]
 stvea1_object@cite_clean <- stvea1_object@cite_clean[,keepProt]
 stvea1_object@cite_protein <- stvea1_object@cite_protein[,keepProt]
-print(keepProt)
-print("Saving output...")
 
 saveRDS(stvea1_object, paste0(arguments$inPrefix,'_Stvea.RDS'))

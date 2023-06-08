@@ -35,7 +35,6 @@ stvea1_object<- readRDS(paste0(arguments$inPrefix,'_Stvea.RDS'))
 codex_split <- sample.int(nC,nrow(stvea1_object@codex_clean),replace=TRUE)
 
 common_proteins <- colnames(stvea1_object@cite_clean)[colnames(stvea1_object@cite_clean) %in% colnames(stvea1_object@codex_clean)]
-print(common_proteins)
 ref_mat <- stvea1_object@cite_clean[,common_proteins]
 stvea1_object@corrected_codex <- data.frame(matrix(,ncol=length(common_proteins),nrow=nrow(stvea1_object@codex_clean)))
 rownames(stvea1_object@corrected_codex) <- row.names(stvea1_object@codex_clean)
