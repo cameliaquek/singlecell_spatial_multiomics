@@ -48,10 +48,10 @@ for (ix in c(1:nC)){
   rna_mat = stvea1_object@cite_latent
   cite_index = 1
   num.cc = ncol(ref_mat)-1
-  k.anchor = 500
-  k.filter=200
-  k.score=200
-  k.weight=200
+  k.anchor = 20
+  k.filter=100
+  k.score=80
+  k.weight=100
   verbose=TRUE
   
   # Call the same functions MapCODEXtoCITE() calls

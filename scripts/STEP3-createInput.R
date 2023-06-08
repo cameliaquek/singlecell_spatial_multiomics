@@ -32,55 +32,31 @@ FitGaussian <- function(norm_protein_expr) {
 }
 
 
-#GaussCITE <-function (norm_cite_protein, num_cores = 1) 
-#{
-#  if (num_cores > 1) {
-#    print("Failed")
-#    fail
-#  }
-#  else {
-#    print("Running FitGauss")
-#    for (i in 1:ncol(norm_cite_protein)) {
-      
-#    cite_protein_list <- lapply(1:ncol(norm_cite_protein), 
-#                                function(i) FitGaussian(norm_cite_protein[, i]))
-#  }
-#  cite_protein_clean <- norm_cite_protein
-#  for (i in 1:ncol(norm_cite_protein)) {
+GaussCITE <-function (norm_cite_protein, num_cores = 1) 
+{
+  if (num_cores > 1) {
+    cite_protein_list <- mclapply(1:ncol(norm_cite_protein), 
+                                  function(i)  FitGaussian(norm_cite_protein[, i]), 
+                                  mc.cores = num_cores)
+  }
+  else {
+    cite_protein_list <- lapply(1:ncol(norm_cite_protein), 
+                                function(i) FitGaussian(norm_cite_protein[, i]))
+  }
+  cite_protein_clean <- norm_cite_protein
+  for (i in 1:ncol(norm_cite_protein)) {
     #      if (!is.null(cite_protein_list[[i]])){
-#    cite_protein_clean[, i] <- cite_protein_list[[i]]
+    cite_protein_clean[, i] <- cite_protein_list[[i]]
     #     }
     #    else{
     #      print(i)
     #      cite_protein_clean[, i] <- 0
-#  }
-#  #}
-#  return(cite_protein_clean)
-#}
-
-  
-  GaussCITE <- function (norm_cite_protein) 
-  {
-    codex_filtered <- norm_cite_protein
-    codex_clean <- norm_cite_protein
-    for (i in 1:ncol(codex_filtered)) {
-      print(paste0("trying",i))
-      fit = Mclust(codex_filtered[, i], G = 2, model = "V", 
-                   verbose = FALSE)
-      if (!is.null(fit)){
-        signal <- as.numeric(which.max(fit$parameters$mean))
-        #print(fit, fit$parameters$mean)
-        expr_clean <- pnorm(codex_filtered[, i], mean = fit$parameters$mean[signal], 
-                            sd = sqrt(fit$parameters$variance$sigmasq[signal]))
-        codex_clean[, i] <- expr_clean
-      }
-      else{
-        print(paste0("failed: ",i))
-        codex_clean[, i] <- 0
-      }
-    }
-    return(codex_clean)
   }
+  #}
+  return(cite_protein_clean)
+}
+
+
 NormCells <- function(to_norm, norm_by=to_norm) {
   nonzero <- rowSums(norm_by) != 0
   protein_norm <- to_norm
@@ -160,10 +136,9 @@ stvea1_object <- copy(stvea1_objectRAW)
 
 
 # CITE-seq protein
-#cite_protein <- read.table("rawdata/MIA_iADT.csv",
-#                           sep=",", row.names=1, header=TRUE)#, stringsAsFactors = FALSE)
-cite_protein <- read.table("../Swarbrick/Tsl_ADT_norm.csv",
+cite_protein <- read.table("rawdata/MIA_iADT.csv",
                            sep=",", row.names=1, header=TRUE)#, stringsAsFactors = FALSE)
+
 
 cite_protein <- as.data.frame(cite_protein)
 print(head(cite_protein))
@@ -184,14 +159,11 @@ print(commonProt)
 #sort(setdiff(colnames(stvea1_object@codex_clean), colnames(cite_protein)))
 #cite_mRNA <- readRDS("rawdata/MIA_iRNA.RDS")
 print("Reading RNA...")
-cite_mRNA <- read.csv("../Swarbrick/Tsl_mRNA_norm.csv",
-                           sep=",", row.names=1, header=TRUE)#, stringsAsFactors = FALSE)
-#cite_mRNA <- readRDS('../Swarbrick/Tsl_mRNA_norm.RDS')
-print("Reading WNN")
+cite_mRNA <- readRDS("rawdata/MIA_iRNA.RDS")
 
 # CITE-seq mRNA latent space, such as output by scVI
-cite_latent <- (read.table("../Swarbrick/Tsl_WNN.csv",
-                           sep=",", header=TRUE, row.names=1, stringsAsFactors = F))#-scvi-latent.csv",
+cite_latent <- (read.table("rawdata/MIA_iPC_latent.csv",
+                           sep=",", header=TRUE, row.names=1, stringsAsFactors = F)),                           
 print("Done reading...")
 
 cite_latent <- as.data.frame(cite_latent)
