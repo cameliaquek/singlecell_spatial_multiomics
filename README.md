@@ -1,16 +1,10 @@
-# AKOYA-MIA
-Data integration across different modalities.
+# MIA-Akoya single cell knitting across different data modalities
+In this study, we constructed a Multimodal Integration Toolkit (MIT), an improved data analysis pipeline, to align each cellular phenotypes with their individual transcriptomic features, cellular epitopes and spatial information at a single cell level for deeper insights into the tumour microenvironment of melanoma in response to immunotherapy.
 
-For count data, refer to shared folder in CloudStor.
-
-Run the Rscript commands inside the RStudio docker: 
-
+In order to run MIT, use the following code:
 docker run -d --name sigcm -p 8787:8787  -v "\<source folder>\:/home/rstudio/singlecellmel" -e USER=rstudio -e PASSWORD=singlecellmel123 adyprat/singlecellmel
 
 To view integrated .h5ad object, use cellxgene to launch:
---port 54890 <directory>/P1_Transferred_092022_1.h5ad
---host 0.0.0.0 --port 64501 <directory>/P3_Transferred_092022_1.h5ad
---host 0.0.0.0 --port 57790 <directory>/P2_Transferred_092022_1.h5ad
---host 0.0.0.0 --port 58456 <directory>/P5_Transferred_120522.h5ad
---host 0.0.0.0 --port 53759 <directory>/P6_Transferred_120522.h5ad
+--host 0.0.0.0 --port 54890 inputs/P1_Transferred_092022_1.h5ad
 
+Please note that the size of the remaining raw imaging and read count data are too large to be stored in a public repository and will therefore be stored in a private cloud-based server. Access to these data sets will be provided upon request.
