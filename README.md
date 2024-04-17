@@ -1,4 +1,4 @@
-# MIA-Akoya single cell knitting across different data modalities
+# Single cell spatial multiomics in cancer
 Main contributor: Aditya Pratapa (spatial), Cam Quek and Ghamdan Al-Eryani (single-cell sequencing).
 
 In this study, we constructed a Multimodal Integration Toolkit (MIT), an improved data analysis pipeline, to align each cellular phenotypes with their individual transcriptomic features, cellular epitopes and spatial information at a single cell level for deeper insights into the tumour microenvironment of melanoma in response to immunotherapy.
